@@ -1,6 +1,4 @@
-Below is an extended, user-friendly `README.md` for your GitHub repository "task-management-automation" based on the provided screenshot and details. It's tailored for a project with a React client, Node.js/Express server using MVC architecture, and OpenAI for automating task management. The content is clear, concise, and engaging for users, developers, and contributors.
 
----
 
 # Task Management Automation with AI
 
