@@ -1,0 +1,1117 @@
+// import React, { useState, useEffect, useRef, useCallback } from "react";
+// import {
+//   Box,
+//   Paper,
+//   IconButton,
+//   CircularProgress,
+//   Fab,
+//   Typography,
+//   ThemeProvider,
+//   createTheme,
+//   TextareaAutosize,
+// } from "@mui/material";
+// import SendIcon from "@mui/icons-material/Send";
+// import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+// import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+// import CheckIcon from "@mui/icons-material/Check";
+// import "react-chat-elements/dist/main.css";
+// import ReactMarkdown from "react-markdown";
+// import remarkGfm from "remark-gfm";
+// import SettingsBackupRestoreIcon from "@mui/icons-material/SettingsBackupRestore";
+// import { createChat } from "../../services/chatService";
+// import { atomOneDark, atomOneLight } from "react-syntax-highlighter/dist/esm/styles/hljs";
+// import Brightness4Icon from "@mui/icons-material/Brightness4"; // Dark mode icon
+// import Brightness7Icon from "@mui/icons-material/Brightness7"; // Light mode icon
+// import SyntaxHighlighter from "react-syntax-highlighter";
+// import toast from "react-hot-toast";
+// import {  getTaskBySessionId, updateTask } from "../../services/taskService";
+// // import FingerprintJS from '@fingerprintjs/fingerprintjs';
+
+// // Define Light and Dark Themes
+// const lightTheme = createTheme({
+//   palette: {
+//     mode: "light",
+//     primary: {
+//       main: "#673ab7",
+//     },
+//     background: {
+//       default: "#ffffff",
+//       paper: "#f5f5f5",
+//     },
+//     text: {
+//       primary: "#000000",
+//       secondary: "#424242",
+//     },
+//   },
+// });
+
+// const darkTheme = createTheme({
+//   palette: {
+//     mode: "dark",
+//     primary: {
+//       main: "#673ab7",
+//     },
+//     background: {
+//       default: "#121212",
+//       paper: "#1e1e1e",
+//     },
+//     text: {
+//       primary: "#ffffff",
+//       secondary: "#b0bec5",
+//     },
+//   },
+// });
+
+// export default function ChatComponent({ sessionId, sessionType }) {
+//   const defaultMessage =
+//     sessionType === "morning"
+//       ? "What tasks do you have today?"
+//       : "Hey! Let’s list your tasks.";
+//   const [tasks, setTasks] = useState([
+//     {
+//       id: Date.now(),
+//       position: "left",
+//       type: "text",
+//       text: defaultMessage,
+//       date: new Date(),
+//     },
+//   ]);
+//   const [inputValue, setInputValue] = useState("");
+//   const [loading, setLoading] = useState(false);
+//   const [showScrollButton, setShowScrollButton] = useState(false);
+//   const [themeMode, setThemeMode] = useState(
+//     localStorage.getItem("themeMode") || "light"
+//   ); // Dynamic theme mode
+//   const [copiedMessageId, setCopiedMessageId] = useState(null); // Track copied tasks
+//   const tasksEndRef = useRef(null);
+//   const chatContainerRef = useRef(null);
+// //   const [fpHash, setFpHash] = React.useState("");
+
+// // // create and set the fingerprint as soon as
+// // // the component mounts
+
+
+  
+// //    Toggle between light and dark themes
+//   const toggleTheme = () => {
+//     localStorage.setItem("themeMode", themeMode === "light" ? "dark" : "light");
+
+//     setThemeMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
+//   };
+
+//   // Update tasks for the session
+//   const UpdateTasks = async () => {
+//     try {
+//       // Evening check-out: Update tasks
+//       if (sessionType === "evening") {
+//         try {
+//           const { tasks } = await getTaskBySessionId(sessionId);
+//           if(tasks.length === 0){
+//               toast.error("No tasks found. Please add tasks first before updating.");
+//           }
+
+//           for (const task of tasks) {
+//             let status = prompt(
+//               `Task: ${task.task_title}. Status (completed/blocked/in progress):`
+//             );
+//             if (!status) {
+//               const confirmSkip = window.confirm(
+//                 `Are you sure you want to skip updating "${
+//                   task.task_title
+//                 }"? It will remain as "${task.status || "pending"}".`
+//               );
+//               if (!confirmSkip) {
+//                 status = prompt(
+//                   `Task: ${task.task_title}. Status (completed/blocked/in progress):`
+//                 );
+//               }
+//             }
+
+//             if (status) {
+//               await updateTask(task.id, {
+//                 task_title: task.task_title,
+//                 task_details: "",
+//                 status: "completed",
+//               });
+//             }
+//           }
+
+//           if (tasks.length > 0) {
+//             setTasks((prev) => [
+//               ...prev,
+//               {
+//                 id: Date.now() + 1,
+//                 position: "left",
+//                 type: "text",
+//                 text: "All tasks updated!",
+//                 date: new Date(),
+//               },
+//             ]);
+//           }
+            
+//           scrollToBottom();
+//         } catch (error) {
+//           console.error("Error updating tasks:", error);
+//           toast.error( error?.response?.data?.message || "Failed to update tasks. Please try again.");
+//         }
+//       }
+//     } catch (error) {
+//       console.error("Error fetching tasks:", error);
+//     }
+//   };
+
+//   useEffect(() => {
+//     UpdateTasks();
+//   }, [sessionId, sessionType]);
+
+//   const scrollToBottom = () => {
+//     setTimeout(() => {
+//       tasksEndRef.current?.scrollIntoView({ behavior: "smooth" });
+//     }, 100);
+//   };
+
+//   const handleScroll = () => {
+//     if (!chatContainerRef.current) return;
+//     const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+//     setShowScrollButton(scrollHeight - scrollTop > clientHeight + 10);
+//   };
+
+//   useEffect(() => {
+//     const chatContainer = chatContainerRef.current;
+//     if (chatContainer) {
+//       chatContainer.addEventListener("scroll", handleScroll);
+//       return () => chatContainer.removeEventListener("scroll", handleScroll);
+//     }
+//      getMacAddress().then((address) => {
+//       console.log(address)
+//     })
+//   }, []);
+//   const getMacAddress = async() => {
+//     const address = ""
+//     return address
+//   }
+
+//   // Parse user input for custom commands
+//   const parseUserInput = (input) => {
+//     const lowerCaseInput = input.toLowerCase().trim();
+//     const completionCommands = [
+//       "done",
+//       "completed",
+//       "submitted",
+//       "submit",
+//       "submit tasks",
+//       "ok",
+//     ];
+//     const listCommand = "list tasks";
+//     const clearCommand = "clear tasks";
+
+//     if (completionCommands.includes(lowerCaseInput)) {
+//       return { command: "complete", message: input };
+//     } else if (lowerCaseInput === listCommand) {
+//       return { command: "list", message: input };
+//     } else if (lowerCaseInput === clearCommand) {
+//       return { command: "clear", message: input };
+//     } else {
+//       return { command: "add", message: input }; // Default to adding tasks
+//     }
+//   };
+
+//   const handleSend = useCallback(
+//     async (text) => {
+//       if (!inputValue.trim() && !text.trim()) return;
+
+//       const parsedInput = parseUserInput(inputValue);
+
+//       // Define user message upfront for reuse
+//       const userMsg = {
+//         id: Date.now(),
+//         position: "right",
+//         type: "text",
+//         text: inputValue,
+//         date: new Date(),
+//       };
+
+//       switch (parsedInput.command) {
+//         case "add":
+//           setTasks((prev) => [...prev, userMsg]);
+//           setInputValue("");
+//           toast.success("Task added successfully.");
+//           break;
+
+//         case "complete":
+//           setLoading(true);
+//           try {
+//             const PROMT_MESSAGE = " Make it formatted and well structured WITH change content nothing more";
+//             const res = await createChat({ sessionId, messages: [...tasks.map((t) => ({ role: "user", content: t.text })), { role: "user", content: inputValue },] });
+
+//             setTasks((prev) => [
+//               ...prev,
+//               {
+//                 id: Date.now() + 1, // Unique ID for the assistant message
+//                 position: "left",
+//                 type: "text",
+//                 text: res?.message || "No response received",
+//                 date: new Date(),
+//               },
+//             ]);
+//             toast.success("Task submitted successfully.");
+//             scrollToBottom();
+//           } catch (error) {
+//             toast.error( error?.response?.data?.message || "Failed to submit task. Please try again.");
+//             console.error("Error sending message:", error);
+//             setTasks((prev) => [...prev, userMsg]); // Add user message even if error occurs
+//           } finally {
+//             setLoading(false);
+//             scrollToBottom();
+//           }
+//           break; // 🔹 **Fix: Ensure break is present**
+
+//         case "list":
+//           if (!Array.isArray(tasks) || tasks.length === 0) {
+//             toast.info("No tasks found.");
+//           } else {
+//             toast.success(`Current tasks:\n${tasks.join("\n")}`);
+//           }
+//           break;
+
+//         case "clear":
+//           // Clear local tasks
+//           setTasks([]);
+//           toast.success("All tasks cleared.");
+//           break;
+
+//         default:
+//           break;
+//       }
+//     },
+//     [inputValue, sessionId,  tasks] // 🔹 Ensure `tasks` is included if used
+//   );
+
+//   const handleCopy = (id, text) => {
+//     navigator.clipboard.writeText(text).then(
+//       () => {
+//         setCopiedMessageId(id); // Mark this message as copied
+//         toast.success("Copied to clipboard!");
+
+//         setTimeout(() => setCopiedMessageId(null), 2000); // Reset after 2 seconds
+//       },
+//       (err) => console.error("Failed to copy text:", err)
+//     );
+//   };
+
+//   const handleReply = (text) => {
+//     // setInputValue(`${inputValue}\n\n${text}`);
+//     handleSend(text);
+//     scrollToBottom();
+//   };
+
+//   return (
+//     <ThemeProvider theme={themeMode === "light" ? lightTheme : darkTheme}>
+
+//       <Paper
+//         sx={{
+//           p: [1, 2, 3, 4],
+//           height: "100%",
+//           maxWidth: "100vw",
+//           display: "flex",
+//           flexDirection: "column",
+//           overflow: "hidden",
+//           position: "relative",
+//         }}
+//       >
+//         {/* Theme Toggle Button */}
+//         <Box
+//           sx={{
+//             position: "absolute",
+//             top: 8,
+//             right: ["5%", "3%"],
+//             zIndex: 10,
+//             display: "flex",
+//             alignItems: "center",
+//             gap: 1,
+//           }}
+//         >
+//           <IconButton onClick={toggleTheme}>
+//             {themeMode === "light" ? <Brightness4Icon /> : <Brightness7Icon />}
+//           </IconButton>
+//         </Box>
+//         <Box
+//           className="custom-scrollbar"
+//           ref={chatContainerRef}
+//           sx={{
+//             flexGrow: 1,
+//             overflowY: "auto",
+//             position: "relative",
+//             mb: [2, 3],
+//             pb: [3, 4],
+//             p: 1,
+//             "&::-webkit-scrollbar": {
+//               width: "8px",
+//             },
+//             "&::-webkit-scrollbar-track": {
+//               background: "#e0e0e0",
+//               borderRadius: "10px",
+//             },
+//             "&::-webkit-scrollbar-thumb": {
+//               background: "#673ab7",
+//               borderRadius: "10px",
+//               transition: "background 0.3s ease-in-out",
+//             },
+//             "&::-webkit-scrollbar-thumb:hover": {
+//               background: "#512da8",
+//             },
+//           }}
+//         >
+//           {tasks
+//             .filter((msg) => msg.text.trim())
+//             .map((msg) => (
+//               <Box
+//                 key={msg.id}
+//                 sx={{
+//                   display: "flex",
+//                   flexDirection: "column",
+//                   alignItems: msg.position === "right" ? "flex-end" : "flex-start",
+//                   my: 1,
+//                 }}
+//               >
+//                 <Box
+//                   sx={{
+//                     maxWidth: "80%",
+//                     p: 2,
+//                     borderRadius: "10px",
+//                     backgroundColor:
+//                       msg.position === "right"
+//                         ? themeMode === "light"
+//                           ? "#e0e0e0"
+//                           : "#000000"
+//                         : themeMode === "light"
+//                         ? "#e0e0e0"
+//                         : "#333333",
+//                     color: themeMode === "light" ? "#000000" : "#ffffff",
+//                     position: "relative",
+//                   }}
+//                 >
+//                   <ReactMarkdown
+//                     children={msg.text}
+//                     remarkPlugins={[remarkGfm]}
+//                     components={{
+//                       code({ node, inline, className, children, ...props }) {
+//                         const match = /language-(\w+)/.exec(className || "");
+//                         return !inline && match ? (
+//                           <Box
+//                             sx={{
+//                               position: "relative",
+//                               display: "flex",
+//                               flexDirection: "column",
+//                             }}
+//                           >
+//                             <SyntaxHighlighter
+//                               children={String(children).replace(/\n$/, "")}
+//                               language={match[1]}
+//                               style={themeMode === "light" ? atomOneLight : atomOneDark}
+//                               PreTag="div"
+//                               {...props}
+//                             />
+//                             <IconButton
+//                               onClick={() => handleCopy(msg.id, String(children))}
+//                               sx={{
+//                                 position: "absolute",
+//                                 top: 5,
+//                                 right: 5,
+//                                 color: "#ffffff",
+//                                 backgroundColor: "#444444",
+//                                 "&:hover": { backgroundColor: "#666666" },
+//                               }}
+//                             >
+//                               {copiedMessageId === msg.id ? (
+//                                 <CheckIcon fontSize="small" />
+//                               ) : (
+//                                 <ContentCopyIcon fontSize="small" />
+//                               )}
+//                             </IconButton>
+//                           </Box>
+//                         ) : (
+//                           <code className={className} {...props}>
+//                             {children}
+//                           </code>
+//                         );
+//                       },
+//                     }}
+//                   />
+//                 </Box>
+//                 <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+//                   <IconButton
+//                     onClick={() => handleCopy(msg.id, msg.text)}
+//                     sx={{
+//                       color: themeMode === "light" ? "#000000" : "#ffffff",
+//                       backgroundColor: themeMode === "light" ? "#e0e0e0" : "#444444",
+//                       "&:hover": {
+//                         backgroundColor: themeMode === "light" ? "#bdbdbd" : "#666666",
+//                       },
+//                     }}
+//                   >
+//                     {copiedMessageId === msg.id ? (
+//                       <CheckIcon fontSize="small" />
+//                     ) : (
+//                       <ContentCopyIcon fontSize="small" />
+//                     )}
+//                   </IconButton>
+//                   <IconButton
+//                     onClick={() => handleReply(msg.text)}
+//                     sx={{
+//                       color: themeMode === "light" ? "#000000" : "#ffffff",
+//                       backgroundColor: themeMode === "light" ? "#e0e0e0" : "#444444",
+//                       "&:hover": {
+//                         backgroundColor: themeMode === "light" ? "#bdbdbd" : "#666666",
+//                       },
+//                     }}
+//                   >
+//                     <SettingsBackupRestoreIcon fontSize="small" />
+//                   </IconButton>
+//                 </Box>
+//               </Box>
+//             ))}
+//           {loading && (
+//             <Box
+//               sx={{
+//                 display: "flex",
+//                 alignItems: "center",
+//                 gap: 1,
+//                 mt: 1,
+//                 justifyContent: "flex-start",
+//               }}
+//             >
+//               {/* <Skeleton variant="circular" width={40} height={40} />
+//               <Skeleton variant="rectangular" width={150} height={40} /> */}
+//               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+//                 <CircularProgress size={20} />
+//                 <Typography variant="body2" color="textSecondary" fontWeight="bold">
+//                   AI is thinking.....
+//                 </Typography>
+//               </Box>
+//             </Box>
+//           )}
+//           <div ref={tasksEndRef} style={{ float: "left", clear: "both" }} />
+//         </Box>
+
+//         {/* Chat Input */}
+//         <Box
+//           sx={{
+//             position: "relative",
+//             display: "flex",
+//             alignItems: "end",
+//             justifyContent: "space-between",
+//             gap: 1,
+//             borderRadius: "10px",
+//             p: 1.5,
+//             m: 1,
+//             backgroundColor: themeMode === "light" ? "#ffffff" : "#333333",
+//             boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.1)",
+//             border: `1px solid ${themeMode === "light" ? "#e0e0e0" : "#333333"}`,
+//             maxWidth: ["100%", "50%"],
+//             width: "100%",
+//             mx: "auto",
+//           }}
+//         >
+//           {showScrollButton && (
+//             <Fab
+//               size="medium"
+//               color="primary"
+//               sx={{
+//                 position: "absolute",
+//                 right: "50%",
+//                 top: "-10px",
+//                 transform: "translate(50%, -50%)",
+//                 zIndex: 10,
+//                 backgroundColor: themeMode === "light" ? "#ffffff" : "#444444",
+//                 color: themeMode === "light" ? "#000000" : "#ffffff",
+//                 "&:hover": {
+//                   backgroundColor: themeMode === "light" ? "#e0e0e0" : "#666666",
+//                 },
+//                 transition: "background-color 0.3s ease",
+//               }}
+//               onClick={scrollToBottom}
+//             >
+//               <KeyboardArrowDownIcon />
+//             </Fab>
+//           )}
+//           <TextareaAutosize
+//             value={inputValue}
+//             onChange={(e) => setInputValue(e.target.value)}
+//             // onKeyDown={(e) => {
+//             //   if (e.key === "Enter" && !e.shiftKey) {
+//             //     e.preventDefault();
+//             //     handleSend();
+//             //   }
+//             // }}
+//             disabled={loading}
+//             minRows={3}
+//             maxRows={8}
+//             style={{
+//               fontSize: "16px",
+//               padding: "10px",
+//               borderRadius: "10px",
+//               border: "none",
+//               outline: "none",
+//               flex: 1,
+//               backgroundColor: themeMode === "light" ? "#ffffff" : "#333333",
+//               color: themeMode === "light" ? "#000000" : "#ffffff",
+//               resize: "none",
+//             }}
+//             placeholder="Message ChatGPT..."
+//           />
+//           <Box
+//             sx={{
+//               display: "flex",
+//               alignItems: "center",
+//               justifyContent: "space-between",
+//               gap: 1,
+//             }}
+//           >
+//             {/* <Box
+//               sx={{
+//                 display: "flex",
+//                 alignItems: "center",
+//                 gap: 1,
+//               }}
+//             >
+
+//               <Badge>Reason</Badge>
+//             </Box> */}
+//             <IconButton
+//               onClick={handleSend}
+//               disabled={loading || !inputValue.trim()}
+//               sx={{
+//                 backgroundColor: themeMode === "light" ? "#673ab7" : "#bb86fc",
+//                 color: "#ffffff",
+//                 borderRadius: "50%",
+//                 p: 1.2,
+//               }}
+//             >
+//               {loading ? <CircularProgress size={26} color="primary" /> : <SendIcon />}
+//             </IconButton>
+//           </Box>
+//         </Box>
+//       </Paper>
+//     </ThemeProvider>
+//   );
+// }
+// "use client";
+
+// import { useState, useEffect, useRef, useCallback } from "react";
+// import {
+//   Box,
+//   Paper,
+//   IconButton,
+//   CircularProgress,
+//   Fab,
+//   Typography,
+//   ThemeProvider,
+//   createTheme,
+//   TextareaAutosize,
+//   List,
+//   ListItem,
+//   ListItemText,
+// } from "@mui/material";
+// import SendIcon from "@mui/icons-material/Send";
+// import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+// import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+// import CheckIcon from "@mui/icons-material/Check";
+// import "react-chat-elements/dist/main.css";
+// import ReactMarkdown from "react-markdown";
+// import remarkGfm from "remark-gfm";
+// import { createChat } from "../../services/chatService";
+// import { atomOneDark, atomOneLight } from "react-syntax-highlighter/dist/esm/styles/hljs";
+// import Brightness4Icon from "@mui/icons-material/Brightness4";
+// import Brightness7Icon from "@mui/icons-material/Brightness7";
+// import SyntaxHighlighter from "react-syntax-highlighter";
+// import toast from "react-hot-toast";
+
+// // Define Light and Dark Themes
+// const lightTheme = createTheme({
+//   palette: {
+//     mode: "light",
+//     primary: {
+//       main: "#673ab7",
+//     },
+//     background: {
+//       default: "#ffffff",
+//       paper: "#f5f5f5",
+//     },
+//     text: {
+//       primary: "#000000",
+//       secondary: "#424242",
+//     },
+//   },
+// });
+
+// const darkTheme = createTheme({
+//   palette: {
+//     mode: "dark",
+//     primary: {
+//       main: "#673ab7",
+//     },
+//     background: {
+//       default: "#121212",
+//       paper: "#1e1e1e",
+//     },
+//     text: {
+//       primary: "#ffffff",
+//       secondary: "#b0bec5",
+//     },
+//   },
+// });
+
+// // Dummy tasks for testing
+// const dummyTasks = [
+//   { id: 1, task_title: "Complete project proposal" },
+//   { id: 2, task_title: "Review pull requests" },
+//   { id: 3, task_title: "Update documentation" },
+//   { id: 4, task_title: "Attend team meeting" },
+// ];
+
+// export default function ChatComponent({ sessionId, sessionType }) {
+//   const [tasks, setTasks] = useState([]);
+//   const [currentTaskIndex, setCurrentTaskIndex] = useState(-1);
+//   const [taskResponses, setTaskResponses] = useState({});
+//   const [inputValue, setInputValue] = useState("");
+//   const [loading, setLoading] = useState(false);
+//   const [showScrollButton, setShowScrollButton] = useState(false);
+//   const [themeMode, setThemeMode] = useState(
+//     localStorage.getItem("themeMode") || "light"
+//   );
+//   const [copiedMessageId, setCopiedMessageId] = useState(null);
+//   const [messages, setMessages] = useState([]);
+//   const tasksEndRef = useRef(null);
+//   const chatContainerRef = useRef(null);
+
+//   const toggleTheme = () => {
+//     localStorage.setItem("themeMode", themeMode === "light" ? "dark" : "light");
+//     setThemeMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
+//   };
+
+//   const addMessage = useCallback((text, isUser = false) => {
+//     setMessages((prev) => [...prev, { id: Date.now(), text, isUser }]);
+//   }, []);
+
+//   const fetchTasks = useCallback(async () => {
+//     if (sessionType === "evening") {
+//       setLoading(true);
+//       try {
+//         // For testing, we'll use dummy tasks instead of fetching from the server
+//         // const { tasks } = await getTaskBySessionId(sessionId);
+//         const tasks = dummyTasks;
+
+//         if (tasks.length === 0) {
+//           addMessage(
+//             "No tasks found for today. Did you forget to add tasks this morning?"
+//           );
+//         } else {
+//           setTasks(tasks);
+//           setCurrentTaskIndex(0);
+//           addMessage(
+//             `Let's update your tasks. First task: ${tasks[0].task_title}. What's the status?`
+//           );
+//         }
+//       } catch (error) {
+//         console.error("Error fetching tasks:", error);
+//         toast.error("Failed to fetch tasks. Please try again.");
+//       } finally {
+//         setLoading(false);
+//       }
+//     } else {
+//       // For morning sessions, just add a welcome message
+//       addMessage("Good morning! What tasks do you have for today?");
+//     }
+//   }, [sessionType, addMessage]);
+
+//   useEffect(() => {
+//     fetchTasks();
+//   }, [fetchTasks]);
+
+//   const scrollToBottom = () => {
+//     setTimeout(() => {
+//       tasksEndRef.current?.scrollIntoView({ behavior: "smooth" });
+//     }, 100);
+//   };
+
+//   const handleScroll = () => {
+//     if (!chatContainerRef.current) return;
+//     const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+//     setShowScrollButton(scrollHeight - scrollTop > clientHeight + 10);
+//   };
+
+//   useEffect(() => {
+//     const chatContainer = chatContainerRef.current;
+//     if (chatContainer) {
+//       chatContainer.addEventListener("scroll", handleScroll);
+//       return () => chatContainer.removeEventListener("scroll", handleScroll);
+//     }
+//   }, []);
+
+//   const handleSend = useCallback(async () => {
+//     if (!inputValue.trim()) return;
+
+//     addMessage(inputValue, true);
+
+//     if (sessionType === "morning") {
+//       // For morning sessions, just echo the input as a new task
+//       addMessage(`Task added: ${inputValue}`);
+//     } else {
+//       // For evening sessions, update task responses
+//       setTaskResponses((prev) => ({
+//         ...prev,
+//         [tasks[currentTaskIndex].id]: inputValue,
+//       }));
+
+//       if (currentTaskIndex < tasks.length - 1) {
+//         setCurrentTaskIndex((prev) => prev + 1);
+//         addMessage(
+//           `Next task: ${tasks[currentTaskIndex + 1].task_title}. What's the status?`
+//         );
+//       } else {
+//         // All tasks have been responded to
+//         addMessage("All tasks updated. Processing your responses...");
+//         await handleUpdate();
+//       }
+//     }
+
+//     setInputValue("");
+//     scrollToBottom();
+//   }, [inputValue, sessionType, currentTaskIndex, tasks, addMessage]);
+
+//   const handleUpdate = async () => {
+//     setLoading(true);
+//     try {
+//       const res = await createChat({
+//         sessionId,
+//         messages: messages.map((m) => ({
+//           role: m.isUser ? "user" : "assistant",
+//           content: m.text,
+//         })),
+//       });
+
+//       const updatedTasks = tasks.map((task) => ({
+//         ...task,
+//         status: taskResponses[task.id],
+//       }));
+
+//       // Simulate updating tasks on the server
+//       // await Promise.all(updatedTasks.map(task =>
+//       //   updateTask(task.id, {
+//       //     task_title: task.task_title,
+//       //     task_details: "",
+//       //     status: task.status,
+//       //   })
+//       // ));
+
+//       addMessage(
+//         res.message ||
+//           "Great job updating your tasks! Here's a summary: [AI-generated summary would go here]"
+//       );
+//       toast.success("Tasks updated successfully!");
+//     } catch (error) {
+//       console.error("Error updating tasks:", error);
+//       addMessage("Failed to update tasks. Please try again.");
+//       toast.error("Failed to update tasks. Please try again.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleCopy = (id, text) => {
+//     navigator.clipboard.writeText(text).then(
+//       () => {
+//         setCopiedMessageId(id);
+//         toast.success("Copied to clipboard!");
+//         setTimeout(() => setCopiedMessageId(null), 2000);
+//       },
+//       (err) => console.error("Failed to copy text:", err)
+//     );
+//   };
+
+//   return (
+//     <ThemeProvider theme={themeMode === "light" ? lightTheme : darkTheme}>
+//       <Paper
+//         sx={{
+//           p: [1, 2, 3, 4],
+//           height: "100%",
+//           maxWidth: "100vw",
+//           display: "flex",
+//           flexDirection: "column",
+//           overflow: "hidden",
+//           position: "relative",
+//         }}
+//       >
+//         <Box
+//           sx={{
+//             position: "absolute",
+//             top: 8,
+//             right: ["5%", "3%"],
+//             zIndex: 10,
+//             display: "flex",
+//             alignItems: "center",
+//             gap: 1,
+//           }}
+//         >
+//           <IconButton onClick={toggleTheme}>
+//             {themeMode === "light" ? <Brightness4Icon /> : <Brightness7Icon />}
+//           </IconButton>
+//         </Box>
+//         <Box
+//           className="custom-scrollbar"
+//           ref={chatContainerRef}
+//           sx={{
+//             flexGrow: 1,
+//             overflowY: "auto",
+//             position: "relative",
+//             mb: [2, 3],
+//             pb: [3, 4],
+//             p: 1,
+//             "&::-webkit-scrollbar": {
+//               width: "8px",
+//             },
+//             "&::-webkit-scrollbar-track": {
+//               background: "#e0e0e0",
+//               borderRadius: "10px",
+//             },
+//             "&::-webkit-scrollbar-thumb": {
+//               background: "#673ab7",
+//               borderRadius: "10px",
+//               transition: "background 0.3s ease-in-out",
+//             },
+//             "&::-webkit-scrollbar-thumb:hover": {
+//               background: "#512da8",
+//             },
+//           }}
+//         >
+//           {messages.map((msg) => (
+//             <Box
+//               key={msg.id}
+//               sx={{
+//                 display: "flex",
+//                 flexDirection: "column",
+//                 alignItems: msg.isUser ? "flex-end" : "flex-start",
+//                 my: 1,
+//               }}
+//             >
+//               <Box
+//                 sx={{
+//                   maxWidth: "80%",
+//                   p: 2,
+//                   borderRadius: "10px",
+//                   backgroundColor: msg.isUser
+//                     ? themeMode === "light"
+//                       ? "#e0e0e0"
+//                       : "#000000"
+//                     : themeMode === "light"
+//                     ? "#e0e0e0"
+//                     : "#333333",
+//                   color: themeMode === "light" ? "#000000" : "#ffffff",
+//                   position: "relative",
+//                 }}
+//               >
+//                 <ReactMarkdown
+//                   children={msg.text}
+//                   remarkPlugins={[remarkGfm]}
+//                   components={{
+//                     code({ node, inline, className, children, ...props }) {
+//                       const match = /language-(\w+)/.exec(className || "");
+//                       return !inline && match ? (
+//                         <Box
+//                           sx={{
+//                             position: "relative",
+//                             display: "flex",
+//                             flexDirection: "column",
+//                           }}
+//                         >
+//                           <SyntaxHighlighter
+//                             children={String(children).replace(/\n$/, "")}
+//                             language={match[1]}
+//                             style={themeMode === "light" ? atomOneLight : atomOneDark}
+//                             PreTag="div"
+//                             {...props}
+//                           />
+//                           <IconButton
+//                             onClick={() => handleCopy(msg.id, String(children))}
+//                             sx={{
+//                               position: "absolute",
+//                               top: 5,
+//                               right: 5,
+//                               color: "#ffffff",
+//                               backgroundColor: "#444444",
+//                               "&:hover": { backgroundColor: "#666666" },
+//                             }}
+//                           >
+//                             {copiedMessageId === msg.id ? (
+//                               <CheckIcon fontSize="small" />
+//                             ) : (
+//                               <ContentCopyIcon fontSize="small" />
+//                             )}
+//                           </IconButton>
+//                         </Box>
+//                       ) : (
+//                         <code className={className} {...props}>
+//                           {children}
+//                         </code>
+//                       );
+//                     },
+//                   }}
+//                 />
+//               </Box>
+//               <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+//                 <IconButton
+//                   onClick={() => handleCopy(msg.id, msg.text)}
+//                   sx={{
+//                     color: themeMode === "light" ? "#000000" : "#ffffff",
+//                     backgroundColor: themeMode === "light" ? "#e0e0e0" : "#444444",
+//                     "&:hover": {
+//                       backgroundColor: themeMode === "light" ? "#bdbdbd" : "#666666",
+//                     },
+//                   }}
+//                 >
+//                   {copiedMessageId === msg.id ? (
+//                     <CheckIcon fontSize="small" />
+//                   ) : (
+//                     <ContentCopyIcon fontSize="small" />
+//                   )}
+//                 </IconButton>
+//               </Box>
+//             </Box>
+//           ))}
+//           {loading && (
+//             <Box
+//               sx={{
+//                 display: "flex",
+//                 alignItems: "center",
+//                 gap: 1,
+//                 mt: 1,
+//                 justifyContent: "flex-start",
+//               }}
+//             >
+//               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+//                 <CircularProgress size={20} />
+//                 <Typography variant="body2" color="textSecondary" fontWeight="bold">
+//                   AI is thinking.....
+//                 </Typography>
+//               </Box>
+//             </Box>
+//           )}
+//           <div ref={tasksEndRef} style={{ float: "left", clear: "both" }} />
+//         </Box>
+
+//         <Box
+//           sx={{
+//             position: "relative",
+//             display: "flex",
+//             alignItems: "end",
+//             justifyContent: "space-between",
+//             gap: 1,
+//             borderRadius: "10px",
+//             p: 1.5,
+//             m: 1,
+//             backgroundColor: themeMode === "light" ? "#ffffff" : "#333333",
+//             boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.1)",
+//             border: `1px solid ${themeMode === "light" ? "#e0e0e0" : "#333333"}`,
+//             maxWidth: ["100%", "50%"],
+//             width: "100%",
+//             mx: "auto",
+//           }}
+//         >
+//           {showScrollButton && (
+//             <Fab
+//               size="medium"
+//               color="primary"
+//               sx={{
+//                 position: "absolute",
+//                 right: "50%",
+//                 top: "-10px",
+//                 transform: "translate(50%, -50%)",
+//                 zIndex: 10,
+//                 backgroundColor: themeMode === "light" ? "#ffffff" : "#444444",
+//                 color: themeMode === "light" ? "#000000" : "#ffffff",
+//                 "&:hover": {
+//                   backgroundColor: themeMode === "light" ? "#e0e0e0" : "#666666",
+//                 },
+//                 transition: "background-color 0.3s ease",
+//               }}
+//               onClick={scrollToBottom}
+//             >
+//               <KeyboardArrowDownIcon />
+//             </Fab>
+//           )}
+//           <TextareaAutosize
+//             value={inputValue}
+//             onChange={(e) => setInputValue(e.target.value)}
+//             disabled={
+//               loading || (sessionType === "evening" && currentTaskIndex >= tasks.length)
+//             }
+//             minRows={3}
+//             maxRows={8}
+//             style={{
+//               fontSize: "16px",
+//               padding: "10px",
+//               borderRadius: "10px",
+//               border: "none",
+//               outline: "none",
+//               flex: 1,
+//               backgroundColor: themeMode === "light" ? "#ffffff" : "#333333",
+//               color: themeMode === "light" ? "#000000" : "#ffffff",
+//               resize: "none",
+//             }}
+//             placeholder={
+//               sessionType === "morning" ? "Enter new task..." : "Enter task status..."
+//             }
+//           />
+//           <Box
+//             sx={{
+//               display: "flex",
+//               alignItems: "center",
+//               justifyContent: "space-between",
+//               gap: 1,
+//             }}
+//           >
+//             <IconButton
+//               onClick={handleSend}
+//               disabled={
+//                 loading ||
+//                 !inputValue.trim() ||
+//                 (sessionType === "evening" && currentTaskIndex >= tasks.length)
+//               }
+//               sx={{
+//                 backgroundColor: themeMode === "light" ? "#673ab7" : "#bb86fc",
+//                 color: "#ffffff",
+//                 borderRadius: "50%",
+//                 p: 1.2,
+//               }}
+//             >
+//               {loading ? <CircularProgress size={26} color="primary" /> : <SendIcon />}
+//             </IconButton>
+//           </Box>
+//         </Box>
+//       </Paper>
+//       {sessionType === "evening" && (
+//         <Paper elevation={3} sx={{ padding: 2, mt: 2 }}>
+//           <Typography variant="h6" gutterBottom>
+//             Task Responses
+//           </Typography>
+//           <List>
+//             {tasks.map((task, index) => (
+//               <ListItem key={task.id}>
+//                 <ListItemText
+//                   primary={task.task_title}
+//                   secondary={
+//                     index <= currentTaskIndex
+//                       ? taskResponses[task.id] || "No response yet"
+//                       : "Pending"
+//                   }
+//                 />
+//               </ListItem>
+//             ))}
+//           </List>
+//         </Paper>
+//       )}
+//     </ThemeProvider>
+//   );
+// }
+

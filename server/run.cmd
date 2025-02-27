@@ -1,0 +1,1 @@
+npx prisma generate && npx prisma migrate dev --name "updated_v3" && npx prisma db push

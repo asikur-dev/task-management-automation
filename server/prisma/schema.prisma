@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql" // Change to "postgresql" if using PostgreSQL
+  url      = env("DATABASE_URL")
+}
+
+model companies {
+  id                String             @id @default(uuid()) @map("id")
+  company_name      String             @map("company_name")
+  admin_email       String             @unique @map("admin_email")
+  password_hash     String             @map("password_hash")
+  logo_url          String?            @map("logo_url")
+  color_scheme      String?            @map("color_scheme")
+  subscription_plan String             @default("Free") @map("subscription_plan")
+  created_at        DateTime           @default(now()) @map("created_at")
+  updated_at        DateTime           @updatedAt @map("updated_at")
+  managers          managers[]         @relation("CompanyToManagers")
+  non_working_days  non_working_days[]
+
+  @@map("companies")
+}
+
+model managers {
+  id            String      @id @default(uuid()) @map("id")
+  company_id    String      @map("company_id")
+  name          String      @map("name")
+  email         String      @unique @map("email")
+  password_hash String      @map("password_hash")
+  is_active     Boolean     @default(true) @map("is_active")
+  created_at    DateTime    @default(now()) @map("created_at")
+  updated_at    DateTime    @updatedAt @map("updated_at")
+  company       companies   @relation("CompanyToManagers", fields: [company_id], references: [id], onDelete: Cascade)
+  employees     employees[]
+
+  @@map("managers")
+}
+
+model employees {
+  id             String             @id @default(uuid()) @map("id")
+  manager_id     String             @map("manager_id")
+  name           String             @map("name")
+  email          String             @unique @map("email")
+  password       String?            @map("password")
+  time_zone      String             @map("time_zone")
+  check_in_time  String             @map("check_in_time")
+  check_out_time String             @map("check_out_time")
+  created_at     DateTime           @default(now()) @map("created_at")
+  updated_at     DateTime           @updatedAt @map("updated_at")
+  manager        managers           @relation(fields: [manager_id], references: [id], onDelete: Cascade)
+  leaves         employee_leaves[]
+  sessions       checkin_sessions[]
+  tasks          tasks[]
+
+  @@map("employees")
+}
+
+model non_working_days {
+  id          String    @id @default(uuid()) @map("id")
+  company_id  String    @map("company_id")
+  date_value  DateTime? @map("date_value")
+  day_of_week Int?      @map("day_of_week")
+  description String?   @map("description")
+  created_at  DateTime  @default(now()) @map("created_at")
+  company     companies @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@map("non_working_days")
+}
+
+model employee_leaves {
+  id          String    @id @default(uuid()) @map("id")
+  employee_id String    @map("employee_id")
+  start_date  DateTime  @map("start_date")
+  end_date    DateTime  @map("end_date")
+  reason      String?   @map("reason")
+  created_at  DateTime  @default(now()) @map("created_at")
+  employee    employees @relation(fields: [employee_id], references: [id], onDelete: Cascade)
+
+  @@map("employee_leaves")
+}
+
+// model checkin_sessions {
+//   id                    String                  @id @default(uuid()) @map("id")
+//   employee_id           String                  @map("employee_id")
+//   session_type          SessionType             @map("session_type")
+//   session_date          DateTime                @map("session_date")
+//   email_sending_time    DateTime?               @map("email_sending_time")
+//   session_start_time    DateTime?               @map("session_start_time")
+//   session_end_time      DateTime?               @map("session_end_time")
+//   fill_time_seconds     Int?                    @map("fill_time_seconds")
+//   ip_address            String?                 @map("ip_address")
+//   device_info           Json?                   @map("device_info")
+//   created_at            DateTime                @default(now()) @map("created_at")
+//   updated_at            DateTime                @updatedAt @map("updated_at")
+//   employee              employees               @relation(fields: [employee_id], references: [id], onDelete: Cascade)
+//   tasks                 tasks[]
+//   conversation_messages conversation_messages[]
+
+//   @@map("checkin_sessions")
+// }
+model checkin_sessions {
+  id                    String                  @id @default(uuid()) @map("id")
+  employee_id           String                  @map("employee_id")
+  session_date          DateTime                @map("session_date") // Date of the session
+  session_type          SessionType?             @map("session_type")
+  email_sending_time    DateTime?               @map("email_sending_time")
+  session_start_time    DateTime?               @map("session_start_time")
+  session_end_time      DateTime?               @map("session_end_time")
+  fill_time_seconds     Int?                    @map("fill_time_seconds")
+  created_at            DateTime                @default(now()) @map("created_at")
+  updated_at            DateTime                @updatedAt @map("updated_at")
+  employee              employees               @relation(fields: [employee_id], references: [id], onDelete: Cascade)
+  tasks                 tasks[]
+  conversation_messages conversation_messages[]
+  device_info           device_info[]           @relation("CheckinSessionDeviceInfo")
+  @@map("checkin_sessions")
+}
+
+model device_info {
+  id                    String                  @id @default(uuid()) @map("id")
+  checkin_session_id    String                  @map("checkin_session_id")
+  session_type          SessionType             @map("session_type") // "morning" or "evening"
+  device_info           Json                    @map("device_info") // Store full device info as JSON
+  created_at            DateTime                @default(now()) @map("created_at")
+  updated_at            DateTime                @updatedAt @map("updated_at")
+  checkin_session       checkin_sessions        @relation("CheckinSessionDeviceInfo", fields: [checkin_session_id], references: [id], onDelete: Cascade)
+  @@map("device_info")
+}
+
+enum SessionType {
+  morning
+  evening
+}
+
+model tasks {
+  id                 String     @id @default(uuid()) @map("id")
+  checkin_session_id String     @map("checkin_session_id")
+  employee_id        String     @map("employee_id") // Added employee relation
+  task_title         String     @map("task_title")
+  task_details       String?    @map("task_details")
+  status             String @default("🚀 pending") @map("status")
+  created_at         DateTime   @default(now()) @map("created_at")
+  updated_at         DateTime   @updatedAt @map("updated_at")
+
+  session  checkin_sessions @relation(fields: [checkin_session_id], references: [id], onDelete: Cascade)
+  employee employees        @relation(fields: [employee_id], references: [id], onDelete: Cascade) // New relation
+
+  @@map("tasks")
+}
+
+enum TaskStatus {
+  pending
+  in_progress
+  completed
+  blocked
+}
+
+model conversation_messages {
+  id                 String           @id @default(uuid()) @map("id")
+  checkin_session_id String           @map("checkin_session_id")
+  role               Role             @map("role")
+  message_content    String           @map("message_content")
+  created_at         DateTime         @default(now()) @map("created_at")
+  session            checkin_sessions @relation(fields: [checkin_session_id], references: [id], onDelete: Cascade)
+
+  @@map("conversation_messages")
+}
+
+enum Role {
+  user
+  assistant
+  system
+}

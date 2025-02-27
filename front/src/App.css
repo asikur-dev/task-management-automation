@@ -1,0 +1,50 @@
+/* Minimal global resets or custom overrides */
+body {
+  margin: 0;
+  font-family: Roboto, sans-serif;
+}
+/* Custom Scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #673ab7 #e0e0e0; /* Thumb and Track colors */
+}
+
+/* WebKit browsers (Chrome, Edge, Safari) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px; /* Adjust scrollbar width */
+  height: 8px; /* Horizontal scrollbar */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #e0e0e0; /* Track background */
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #673ab7; /* Thumb color */
+  border-radius: 10px;
+  transition: background 0.3s ease-in-out;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #512da8; /* Darker on hover */
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .custom-scrollbar {
+    scrollbar-color: #673ab7 #2e2e2e;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #2e2e2e;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #9c27b0;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #7b1fa2;
+  }
+}
